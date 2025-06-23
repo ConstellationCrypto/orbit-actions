@@ -20,13 +20,17 @@ contract ExecuteL2FeesActionScript is Script {
         IUpgradeExecutor executor = IUpgradeExecutor(parentUpgradeExecutor);
         ArbOwner arbOwner = ArbOwner(l2ArbOwner);
 
-        console.log("SCHEDULE_TIMESTAMP");
-        console.logUint(scheduleTimestamp);
+        console.log("PRICE_PER_UNIT");
+        console.logUint(pricePerUnit);
+        console.logUint(pricePerUnit);
+        console.logUint(pricePerUnit);
+        console.log(vm.envString("PRICE_PER_UNIT"));
 
         bytes memory data =
             abi.encodeWithSelector(arbOwner.setMinimumL2BaseFee.selector, pricePerUnit);
         bytes memory onL2data = abi.encodeWithSelector(executor.executeCall.selector, l2ArbOwner, data);
-
+console.log("onL2data");
+console.logBytes(onL2data);
         bytes memory inboxData;
         if (ct) {
             uint256 maxFeePerGas = 10 gwei;
