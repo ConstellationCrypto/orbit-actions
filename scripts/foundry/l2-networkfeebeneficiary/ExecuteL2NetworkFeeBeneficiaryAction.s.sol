@@ -3,7 +3,7 @@ pragma solidity 0.8.16;
 
 import "forge-std/Script.sol";
 import {IERC20Inbox} from "@arbitrum/nitro-contracts-2.1.0/src/bridge/IERC20Inbox.sol";
-import {IInbox} from "@arbitrum/nitro-contracts-1.2.1/src/bridge/IInbox.sol";
+import {IInbox} from "@arbitrum/nitro-contracts-2.1.0/src/bridge/IInbox.sol";
 import {IUpgradeExecutor} from "@offchainlabs/upgrade-executor/src/IUpgradeExecutor.sol";
 import {ArbOwner} from "@arbitrum/nitro-contracts-2.1.0/src/precompiles/ArbOwner.sol";
 import {console} from "forge-std/console.sol";
