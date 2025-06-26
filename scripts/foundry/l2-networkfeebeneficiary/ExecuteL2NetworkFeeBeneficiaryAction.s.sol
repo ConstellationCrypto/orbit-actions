@@ -14,14 +14,16 @@ contract ExecuteL2FeesActionScript is Script {
         bool multisig = vm.envBool("MULTISIG");
         bool ct = vm.envBool("CUSTOM_TOKEN_ENABLED");
         address parentUpgradeExecutor = vm.envAddress("PARENT_UPGRADE_EXECUTOR_ADDRESS");
-        uint256 pricePerUnit = vm.envUint("PRICE_PER_UNIT");
+        uint256 pricePerUnit = vm.envUint("L2_NETWORK_FEE_BENEFICIARY");
         address upgradeExecutorL2 = vm.envAddress("UPGRADE_EXECUTOR_L2");
         address l2ArbOwner = 0x0000000000000000000000000000000000000070;
         IUpgradeExecutor executor = IUpgradeExecutor(parentUpgradeExecutor);
         ArbOwner arbOwner = ArbOwner(l2ArbOwner);
 
+        
+
         bytes memory data =
-            abi.encodeWithSelector(arbOwner.setMinimumL2BaseFee.selector, pricePerUnit);
+            abi.encodeWithSelector(arbOwner.setNetworkFeeAccount.selector, pricePerUnit);
         bytes memory onL2data = abi.encodeWithSelector(executor.executeCall.selector, l2ArbOwner, data);
 
         bytes memory inboxData;
