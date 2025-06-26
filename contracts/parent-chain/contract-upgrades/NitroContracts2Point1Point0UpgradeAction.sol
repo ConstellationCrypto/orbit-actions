@@ -30,18 +30,17 @@ contract NitroContracts2Point1Point0UpgradeAction {
     bytes32 public immutable newWasmModuleRoot;
     address public immutable newChallengeManagerImpl;
     IOneStepProofEntry public immutable osp;
-    bytes32 public immutable condRoot0;
-    bytes32 public immutable condRoot1;
-    bytes32 public immutable condRoot2;
+    bytes32 public immutable condRoot;
     IOneStepProofEntry public immutable condOsp;
+
     address public immutable newRollupAdminLogic;
     address public immutable newRollupUserLogic;
-    bytes32[3] public condRoot;
+
     constructor(
         bytes32 _newWasmModuleRoot,
         address _newChallengeManagerImpl,
         IOneStepProofEntry _osp,
-        bytes32[3] memory _condRoot,
+        bytes32 _condRoot,
         IOneStepProofEntry _condOsp,
         address _newRollupAdminLogic,
         address _newRollupUserLogic
@@ -71,15 +70,11 @@ contract NitroContracts2Point1Point0UpgradeAction {
         newChallengeManagerImpl = _newChallengeManagerImpl;
         osp = _osp;
         condRoot = _condRoot;
-        condRoot0 = _condRoot[0];
-        condRoot1 = _condRoot[1];
-        condRoot2 = _condRoot[2];
         condOsp = _condOsp;
         newRollupAdminLogic = _newRollupAdminLogic;
         newRollupUserLogic = _newRollupUserLogic;
     }
-    //NOTE that we read from immutable variables ONLY
-    //because perform is executed through a delegetecall via executable l1 contract
+
     function perform(IRollupCore rollup, ProxyAdmin proxyAdmin) external {
         /// check if previous upgrade v1.2.1 was performed by polling function which was introduced in that version
         ISequencerInbox_v1_2_1 sequencerInbox = ISequencerInbox_v1_2_1(address(rollup.sequencerInbox()));
@@ -87,18 +82,11 @@ contract NitroContracts2Point1Point0UpgradeAction {
         catch {
             revert("NitroContracts2Point1Point0UpgradeAction: sequencer inbox needs to be at version >= 1.2.1");
         }
-        bool contains = false;
-        if (condRoot0 == rollup.wasmModuleRoot()) {
-            contains = true;
-        } else if (condRoot1 == rollup.wasmModuleRoot()) {
-            contains = true;
-        }
-        else if (condRoot2 == rollup.wasmModuleRoot()) { 
-            contains = true;
-        }
-        // check that condRoot is being used
-        require(contains, "NitroContracts2Point1Point0UpgradeAction: wasm root mismatch");
-        // do the upgrade
+
+        /// check that condRoot is being used
+        require(rollup.wasmModuleRoot() == condRoot, "NitroContracts2Point1Point0UpgradeAction: wasm root mismatch");
+
+        /// do the upgrade
         _upgradeChallengerManager(rollup, proxyAdmin);
         _upgradeRollup(address(rollup));
     }
@@ -107,20 +95,10 @@ contract NitroContracts2Point1Point0UpgradeAction {
         // set the new challenge manager impl
         TransparentUpgradeableProxy challengeManager =
             TransparentUpgradeableProxy(payable(address(rollup.challengeManager())));
-        bytes32 finalCondRoot = bytes32(0);
-        if (condRoot0 == rollup.wasmModuleRoot()) {
-            finalCondRoot = condRoot0;
-        } else if (condRoot1 == rollup.wasmModuleRoot()) {
-            finalCondRoot = condRoot1;
-        }
-        else if (condRoot2 == rollup.wasmModuleRoot()) { 
-            finalCondRoot = condRoot2;
-        }
-        require(finalCondRoot != bytes32(0), "NitroContracts2Point1Point0UpgradeAction: wasm root mismatch");
         proxyAdmin.upgradeAndCall(
             challengeManager,
             newChallengeManagerImpl,
-            abi.encodeCall(IChallengeManagerUpgradeInit.postUpgradeInit, (osp, finalCondRoot, condOsp))
+            abi.encodeCall(IChallengeManagerUpgradeInit.postUpgradeInit, (osp, condRoot, condOsp))
         );
 
         // verify
@@ -155,9 +133,5 @@ contract NitroContracts2Point1Point0UpgradeAction {
             rollup.anyTrustFastConfirmer() == address(0),
             "NitroContracts2Point1Point0UpgradeAction: unexpected fast confirmer address"
         );
-    }
-
-    function getCondRoot() public view returns (bytes32[3] memory) {
-        return condRoot;
     }
 }
