@@ -170,7 +170,10 @@ contract VanillaMigrationNitroContracts2Point1Point3UpgradeAction {
       address(condOsp) != address(osp),
       'VanillaMigrationNitroContracts2Point1Point3UpgradeAction: OSP already vanilla'
     );
-
+require(
+  IChallengeManagerUpgradeInit(address(challengeManager)).getOsp(newWasmModuleRoot) == address(osp),
+  "VanillaMigrationNitroContracts2Point1Point3UpgradeAction: target root OSP mismatch"
+);
     proxyAdmin.upgradeAndCall(
       challengeManager,
       newChallengeManagerImpl,
